@@ -45,12 +45,12 @@ void loop() {
 
 //  Serial.print("Test");
 
-  ir1 = analogRead(A1);
-  ir2 = analogRead(A2);
-  ir3 = analogRead(A3);
-  ir4 = analogRead(A4);
+  ir1 = analogRead(IR1);
+  ir2 = analogRead(IR2);
+  ir3 = analogRead(IR3);
+  ir4 = analogRead(IR4);
 
-  // ir5 = analogRead(A5);
+  // ir5 = analogRead(IR5);
   
   arrayFill();
 
