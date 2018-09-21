@@ -165,10 +165,9 @@ void move_bot(char m){
       digitalWrite(motorPin3, LOW);
       digitalWrite(motorPin4, LOW);
 
-      // blink led_Pin
+      // blink led:
 
       ledBlink();
-
       break;
     }
 }
@@ -194,6 +193,22 @@ char det_Turn(){
     else if(s.equals("R")){
       ret  = 'R';
     }
+  }
+
+  else if(sensors == "1111") {
+    String s = moveInch('T');
+    
+    if (s.equals("L")) {
+      ret = 'L';
+    }
+    else if(s.equals("CR")) {
+      // implement cross
+    }
+    else if(s.equals("EOM")) {
+      ret = 'H';
+      
+    }
+    
   }
 
   //Check for straight
@@ -241,7 +256,7 @@ String moveInch(char ch){
   else if (ch == 'T') {
     
     if (sensors.equals("0000")) {
-      ret = "T";
+      ret = "L";
     }
     else if (sensors.equals("1111")) {
       ret = "EOM";
@@ -257,9 +272,11 @@ String moveInch(char ch){
 }
 
 void ledBlink() {
-
-  digitalWrite(led_Pin, HIGH);
-  delay(1000);
-  digitalWrite(led_Pin, LOW);
-  delay(1000);
+  
+  while(true){
+    digitalWrite(led_Pin, HIGH);
+    delay(1000);
+    digitalWrite(led_Pin, LOW);
+    delay(1000);
+  }
 }
