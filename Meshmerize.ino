@@ -35,6 +35,9 @@ void setup() {
   pinMode(motorPin3, OUTPUT);
   pinMode(motorPin4, OUTPUT);  
 
+  pinMode(led_Pin, OUTPUT);
+
+
   Serial.begin(9600);
 }
 
@@ -127,14 +130,25 @@ void move_bot(char m){
     switch(m)
     {
     case 'R':
-        //Turn Right.
+      digitalWrite(motorPin1, LOW);
+      digitalWrite(motorPin2, LOW);
+      digitalWrite(motorPin3, HIGH);
+      digitalWrite(motorPin4, LOW);
+      break;
 
     case 'L':
-        
+      digitalWrite(motorPin1, HIGH);
+      digitalWrite(motorPin2, LOW);
+      digitalWrite(motorPin3, LOW);
+      digitalWrite(motorPin4, LOW);
+      break;
 
     case 'S':
-        //  motor driver: full speed straight
-        break;
+      digitalWrite(motorPin1, HIGH);
+      digitalWrite(motorPin2, LOW);
+      digitalWrite(motorPin3, HIGH);
+      digitalWrite(motorPin4, LOW);
+      break;
 
     case 'U':
         //  motor driver: turn 180 degrees
@@ -143,6 +157,19 @@ void move_bot(char m){
     case 'E':
         //  motor driver: move a bit forward in the same direction
         break;
+
+    case 'H':
+      //  motor driver: halt
+      digitalWrite(motorPin1, LOW);
+      digitalWrite(motorPin2, LOW);
+      digitalWrite(motorPin3, LOW);
+      digitalWrite(motorPin4, LOW);
+
+      // blink led_Pin
+
+      ledBlink();
+
+      break;
     }
 }
 
@@ -207,6 +234,32 @@ String moveInch(char ch){
 
   }
 
+  else if(ch == 'D') {
+    ret = "DE";
+  }
+
+  else if (ch == 'T') {
+    
+    if (sensors.equals("0000")) {
+      ret = "T";
+    }
+    else if (sensors.equals("1111")) {
+      ret = "EOM";
+    }
+      
+    else if (sensors.equals("0110")) {
+      ret = "CR";
+    }
+  }
+
   return ret;
 
+}
+
+void ledBlink() {
+
+  digitalWrite(led_Pin, HIGH);
+  delay(1000);
+  digitalWrite(led_Pin, LOW);
+  delay(1000);
 }
