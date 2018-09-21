@@ -202,7 +202,7 @@ char det_Turn(){
       ret = 'L';
     }
     else if(s.equals("CR")) {
-      // implement cross
+      ret = 'L';
     }
     else if(s.equals("EOM")) {
       ret = 'H';
