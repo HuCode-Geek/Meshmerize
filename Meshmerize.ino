@@ -1,282 +1,379 @@
+//For Distance Sensors
+#define DS A0
 
-//Array Pins
-#define IR1 A1
-#define IR2 A2
-#define IR3 A3
-#define IR4 A4
-// #define IR5 A5
+//For Line Sensors
+#define LS1 A1
+#define LS2 A2
+#define LS3 A3
+#define LS4 A4
+#define LS5 A5
 
-//Motor A (Left)
-const int motorPin1  = 10;    // Pin 15 of L293D IC
-const int motorPin2  = 11;    // Pin 10 of L293D IC
+// Motor Driver Pins
 
-//Motor B (Right)
-const int motorPin3  = 9;   // Pin  7 of L293D IC
-const int motorPin4  = 8;   // Pin  2 of L293D IC
+// Motor Right
+#define RIN1 8
+#define RIN2 9
 
-//Led Pin
-const int led_Pin = 12;
+// Motor Left
+#define LIN1 6
+#define LIN2 7
+
+//Other Pins
+#define LEDPIN 10
 
 //Variables
-int ir1, ir2, ir3, ir4, ir5;
-int ar[4];
-String sensors = "";
+int ls1, ls2, ls3, ls4, ls5;
+int ds;
+String bin = "";
+String path = "";
+int run_ID;
+int path_ID;
 
-void setup() {
+void setup()
+{
 
-  pinMode(IR1, INPUT);
-  pinMode(IR2, INPUT);
-  pinMode(IR3, INPUT);
-  pinMode(IR4, INPUT);
-  // pinMode(IR5, INPUT);
+  // Ir Array Pin modes
+  pinMode(LS1, INPUT);
+  pinMode(LS2, INPUT);
+  pinMode(LS3, INPUT);
+  pinMode(LS4, INPUT);
+  pinMode(LS5, INPUT);
 
-  pinMode(motorPin1, OUTPUT);
-  pinMode(motorPin2, OUTPUT);
-  pinMode(motorPin3, OUTPUT);
-  pinMode(motorPin4, OUTPUT);  
+  //Motor Driver Pin modes
+  pinMode(RIN1, OUTPUT);
+  pinMode(RIN2, OUTPUT);
+  pinMode(LIN1, OUTPUT);
+  pinMode(LIN2, OUTPUT);
 
-  pinMode(led_Pin, OUTPUT);
-
+  pinMode(LEDPIN, OUTPUT);
 
   Serial.begin(9600);
+
+  delay(3000);
+
+  run_ID = 0;
+
+  Serial.println("Begin");
 }
 
-void loop() {
+void loop()
+{
 
-//  Serial.print("Test");
-
-  ir1 = analogRead(IR1);
-  ir2 = analogRead(IR2);
-  ir3 = analogRead(IR3);
-  ir4 = analogRead(IR4);
-
-  // ir5 = analogRead(IR5);
-  
-  arrayFill();
-
-  Serial.print("\n");
-
-  delay(1000);
-}
-
-void arrayFill(){
-
-  Serial.println("arrayFill");
-
-  if(ir1 > 500) {
-    // Serial.print("1");
-    ar[0] = 1;
-    sensors += "1";
-  }
-  else {
-    ar[0] = 0;
-    sensors += "0";
-    // Serial.print("0");
-  }
-  
-  if(ir2 > 500) {
-    ar[1] = 1;
-    sensors += "1";
-    // Serial.print("1");
-  }
-  else {
-    ar[1] = 0;
-    sensors += "0";
-    // Serial.print("0");
-  }
-
-  if(ir3 > 500) {
-    ar[2] = 1;
-    sensors += "1";
-    // Serial.print("1");
-  }
-  else {
-    ar[2] = 0;
-    sensors += "0";
-    // Serial.print("0");
-  }
-
-  if(ir4 > 500) {
-    ar[3] = 1;
-    sensors += "1";
-    // Serial.print("1");
-  }
-  else {
-    ar[3] = 0;
-    sensors += "0";
-    // Serial.print("0");
-  }
-
-  
-  for(int i = 0; i < 4; i++)
+  if (run_ID == 0)
   {
-    Serial.print(ar[i]);
+    //Dry run
+    dryRun();
+  }
+  else if (run_ID == 1)
+  {
+    //Actual run
+    digitalWrite(LEDPIN, LOW);
+    actualRun();
   }
 
-  Serial.println(sensors);
-  
-
-  // if(e > 500) {
-  //   Serial.print("1");
-  // }
-  // else {
-  //   Serial.print("0");
-  // }
-  
+  delay(2000);
 }
 
-//  function to move the bot around
-void move_bot(char m){
-    switch(m)
-    {
-    case 'R':
-      digitalWrite(motorPin1, LOW);
-      digitalWrite(motorPin2, LOW);
-      digitalWrite(motorPin3, HIGH);
-      digitalWrite(motorPin4, LOW);
-      break;
+void actualRun()
+{
+  bin = "";
 
-    case 'L':
-      digitalWrite(motorPin1, HIGH);
-      digitalWrite(motorPin2, LOW);
-      digitalWrite(motorPin3, LOW);
-      digitalWrite(motorPin4, LOW);
-      break;
+  bin = readSensors();
 
-    case 'S':
-      digitalWrite(motorPin1, HIGH);
-      digitalWrite(motorPin2, LOW);
-      digitalWrite(motorPin3, HIGH);
-      digitalWrite(motorPin4, LOW);
-      break;
-
-    case 'U':
-        //  motor driver: turn 180 degrees
-        break;
-
-    case 'E':
-        //  motor driver: move a bit forward in the same direction
-        break;
-
-    case 'H':
-      //  motor driver: halt
-      digitalWrite(motorPin1, LOW);
-      digitalWrite(motorPin2, LOW);
-      digitalWrite(motorPin3, LOW);
-      digitalWrite(motorPin4, LOW);
-
-      // blink led:
-
-      ledBlink();
-      break;
-    }
+  checkForIntersectionAR();
 }
 
-char det_Turn(){
+void dryRun()
+{
+  bin = "";
 
-  char ret = '\0'; 
+  bin = readSensors();
 
-  //Check for left
-  if( sensors == "1110" || sensors == "1100" ){
-    //  Left turn
-    ret = 'L';
-  }
+  Serial.println(bin);
 
-  //Check for right
-  else if( sensors == "0011" || sensors == "0111" ){
-    //  Right turn.
-    // Move Inch Implementation.
-    String s = moveInch('R');
-    if(s.equals("SR")){
-      ret = 'S';
-    }
-    else if(s.equals("R")){
-      ret  = 'R';
-    }
-  }
+  checkForIntersectionDR(bin);
 
-  else if(sensors == "1111") {
-    String s = moveInch('T');
-    
-    if (s.equals("L")) {
-      ret = 'L';
-    }
-    else if(s.equals("CR")) {
-      ret = 'L';
-    }
-    else if(s.equals("EOM")) {
-      ret = 'H';
-      
-    }
-    
-  }
+  //delay(500);
+}
 
-  //Check for straight
-  if( sensors == "0110" )
-    ret = 'S';
+String readSensors()
+{
+  String ret = "";
+  ls1 = analogRead(LS1);
+  ls2 = analogRead(LS2);
+  ls3 = analogRead(LS3);
+  ls4 = analogRead(LS4);
+  ls5 = analogRead(LS5);
+
+  if (ls1 > 500)
+    ret += "1";
+  else
+    ret += "0";
+
+  if (ls2 > 500)
+    ret += "1";
+  else
+    ret += "0";
+
+  if (ls3 > 500)
+    ret += "1";
+  else
+    ret += "0";
+
+  if (ls4 > 500)
+    ret += "1";
+  else
+    ret += "0";
+
+  if (ls5 > 500)
+    ret += "1";
+  else
+    ret += "0";
 
   return ret;
-
 }
 
-String moveInch(char ch){
+void checkForIntersectionAR()
+{
+  if (bin.equals("01111") || bin.equals("00111") || bin.equals("11100") || bin.equals("11110") || bin.equals("11111"))
+  {
+    turn(bin.charAt(path_ID++));
+  }
+  else
+  {
+    turn('S');
+  }
+}
 
-  //Motor Driver moves the bot move forward.
-  
+void checkForIntersectionDR(String s)
+{
+  //Check for Left
+  if (s.equals("11110") || s.equals("11100"))
+  {
+    Serial.println("L");
+    path += "L";
+    turn('L');
+  }
+  //Check for Right
+  else if (s.equals("01111") || s.equals("00111"))
+  {
+
+    String res = moveInch("R");
+    //Case of a Straight Right
+    if (res.equals("SR"))
+    {
+
+      Serial.println("S");
+      path += "S";
+      turn('S');
+    }
+    //Case of a Right - Only
+    else if (res.equals("R"))
+    {
+
+      Serial.println("R");
+      path += "R";
+      turn('R');
+    }
+  }
+  //Check for Cross, T and EOM
+  else if (s.equals("11111"))
+  {
+
+    String res = moveInch("3W");
+
+    //In case of End Of Maze(EOM)
+    if (res.equals("EOM"))
+    {
+      endOfMaze();
+    }
+
+    //In case of T or Cross way.
+    else if (res.equals("L"))
+    {
+      path += "L";
+      Serial.println("L");
+      turn('L');
+    }
+  }
+  //Check for U turn
+  else if (s.equals("00000"))
+  {
+    path += "U";
+    Serial.println("U");
+    turn('U');
+  }
+  else
+    turn('S');
+}
+
+void turn(char dir)
+{
+  switch (dir)
+  {
+  case 'R':
+    digitalWrite(RIN1, LOW);
+    digitalWrite(RIN2, LOW);
+    digitalWrite(LIN1, HIGH);
+    digitalWrite(LIN2, LOW);
+    break;
+  case 'L':
+    digitalWrite(RIN1, HIGH);
+    digitalWrite(RIN2, LOW);
+    digitalWrite(LIN1, LOW);
+    digitalWrite(LIN2, LOW);
+    break;
+  case 'S':
+    digitalWrite(RIN1, LOW);
+    digitalWrite(RIN2, HIGH);
+    digitalWrite(LIN1, LOW);
+    digitalWrite(LIN2, HIGH);
+    break;
+  case 'U':
+    digitalWrite(RIN1, HIGH);
+    digitalWrite(RIN2, LOW);
+    digitalWrite(LIN1, LOW);
+    digitalWrite(LIN2, HIGH);
+    break;
+
+  default:
+    Serial.println("Oh Boy!");
+  }
+}
+
+String moveInch(String ch)
+{
+
   String ret = "";
 
-  arrayFill();
+  turn('S');
 
-  if(ch == 'L'){
+  delay(300);
 
-    if(sensors.equals("0110")){
-      ret = "SL";
-    }
-    else if(sensors.equals("0000")){
-      ret = "L";
-    }
+  //Stop the motors
+  digitalWrite(RIN1, LOW);
+  digitalWrite(RIN2, LOW);
+  digitalWrite(LIN1, LOW);
+  digitalWrite(LIN2, LOW);
 
-  }
+  String check = readSensors();
 
-  else if(ch == 'R'){
-
-    if(sensors.equals("0110")){
+  //Check for Right Only or Staright-Right
+  if (ch.equals("R"))
+  {
+    //Check for Straight-Right
+    if (check.equals("01110") || check.equals("00110") || check.equals("01100"))
+    {
       ret = "SR";
     }
-    else if(sensors.equals("0000")){
+    //Check for Right Only
+    else if (check.equals("00000"))
+    {
       ret = "R";
     }
-
   }
-
-  else if(ch == 'D') {
-    ret = "DE";
-  }
-
-  else if (ch == 'T') {
-    
-    if (sensors.equals("0000")) {
-      ret = "L";
-    }
-    else if (sensors.equals("1111")) {
+  //Check for 3 way Intersection
+  else if (ch.equals("3W"))
+  {
+    //Check for EOM(End of Maze)
+    if (check.equals("11111"))
+    {
       ret = "EOM";
     }
-      
-    else if (sensors.equals("0110")) {
-      ret = "CR";
+    else if (check.equals("01110") || check.equals("00110") || check.equals("01100") || check.equals("00000"))
+    {
+      ret = "L";
+    }
+  }
+  return ret;
+}
+
+void endOfMaze()
+{
+
+  digitalWrite(RIN1, LOW);
+  digitalWrite(RIN2, LOW);
+  digitalWrite(LIN1, LOW);
+  digitalWrite(LIN2, LOW);
+
+  digitalWrite(LEDPIN, HIGH);
+
+  run_ID = 1;
+
+  path_ID = 0;
+
+  path.trim();
+
+  optimizePath(path);
+  delay(10000);
+}
+
+void optimizePath(String p)
+{
+  String temp = "";
+  while (isPathOpt(p))
+  {
+    for (int i = 0; i < p.length(); i++)
+    {
+      if (p.charAt(i) == 'U')
+      {
+        //Serial.println("Path : " + p);
+        if (i > 0)
+          temp += p.charAt(i - 1);
+        temp += p.charAt(i);
+        if (i < p.length() - 1)
+          temp += p.charAt(i + 1);
+        //Serial.println("Temp : " + temp);
+        String replace = checkReplacement(temp);
+        if (!replace.equals(""))
+        {
+          //Serial.println(replace + "|" + p);
+          p = p.substring(0, i - 1) + replace + p.substring(i + 2);
+        }
+
+        temp = "";
+      }
+    }
+  }
+  Serial.println("Optimized Path: " + p);
+}
+
+boolean isPathOpt(String p)
+{
+  boolean ret = false;
+  for (int i = 0; i < p.length(); i++)
+  {
+    if (p.charAt(i) == 'U')
+    {
+      // Serial.println("In isPathOpt: Path - " + p);
+      // Serial.println("U found at- :" + (i+1));
+      ret = true;
+      break;
     }
   }
 
   return ret;
-
 }
 
-void ledBlink() {
-  
-  while(true){
-    digitalWrite(led_Pin, HIGH);
-    delay(1000);
-    digitalWrite(led_Pin, LOW);
-    delay(1000);
-  }
+String checkReplacement(String temp)
+{
+  // Serial.println();
+  // Serial.println("In checkReplacement");
+  // Serial.println("Paramter String: " +  temp);
+  // Serial.println();
+  String ret = temp;
+  if (temp.equalsIgnoreCase("LUR"))
+    ret = "U";
+  if (temp.equalsIgnoreCase("LUS"))
+    ret = "R";
+  if (temp.equalsIgnoreCase("RUL"))
+    ret = "U";
+  if (temp.equalsIgnoreCase("SUL"))
+    ret = "R";
+  if (temp.equalsIgnoreCase("SUS"))
+    ret = "U";
+  if (temp.equalsIgnoreCase("LUL"))
+    ret = "S";
+
+  return ret;
 }
