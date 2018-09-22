@@ -116,7 +116,6 @@ String readSensorsDR()
 
 void checkForIntersectionDR(String s)
 {
-
   // Check for Left
   if (s.equals("11100") || s.equals("11110") || s.equals("11111"))
   {
@@ -197,18 +196,15 @@ String moveInch(char ch)
 
 if(ch == 'R') {
   
-  if (read.equals("01111") || read.equals("00111")) {
-    ret = "SR";
-  }  
-}
-
-
-if (ch == 'L') {
-  
-  if (read.equals("11110") || read.equals("11100")) {
-    ret = "L";
+  if (read.equals("00011") || read.equals("00001")) {
+    ret = "R";
   }
   
+  else if (read.equals("00111"))
+  {
+    ret  = "SR";
+  }
+    
 }
 return ret;
 }
